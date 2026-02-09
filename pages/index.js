@@ -1,4 +1,4 @@
-// index.js (Home Component) - Simplified for grid layout.
+'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import GreetingForm from '../components/GreetingForm';
@@ -10,6 +10,7 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [audioStarted, setAudioStarted] = useState(false);
 
   const trackAudioRef = useRef(null);
   const submitAudioRef = useRef(null);
@@ -19,7 +20,7 @@ export default function Home() {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Load messages from MongoDB (no position calculation needed)
+  // Load messages from MongoDB
   const loadMessages = async () => {
     try {
       const res = await fetch('/api/greetings');
@@ -35,30 +36,37 @@ export default function Home() {
     loadMessages();
   }, []);
 
-  // Play track01.mp3 when form opens
-  useEffect(() => {
-    if (!trackAudioRef.current) {
-      trackAudioRef.current = new Audio('/track04.mp3');
-      trackAudioRef.current.loop = true;
-      trackAudioRef.current.volume = 0.2;
-      trackAudioRef.current.play().catch(() => {});
+  // Play opening track after first user interaction
+  const startTrackAudio = () => {
+    if (!audioStarted) {
+      if (!trackAudioRef.current) {
+        trackAudioRef.current = new Audio('/track04.mp3');
+        trackAudioRef.current.loop = true;
+        trackAudioRef.current.volume = 0.2;
+      }
+      trackAudioRef.current
+        .play()
+        .catch(() => console.log('User interaction required to play audio'));
+      setAudioStarted(true);
     }
-  }, []);
+  };
 
+  // Form submission handler
   const handleFormDone = () => {
-    // Stop track01
+    // Stop track04
     if (trackAudioRef.current) trackAudioRef.current.pause();
 
-    // Play music.mp3 after submission
+    // Play submission track
     if (!submitAudioRef.current) {
       submitAudioRef.current = new Audio('/track02.mp3');
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }
-    submitAudioRef.current.play().catch(() => {});
+    submitAudioRef.current
+      .play()
+      .catch(() => console.log('User interaction required to play audio'));
 
     setSubmitted(true);
-    // Reload messages to show the new submission
     loadMessages();
   };
 
@@ -79,11 +87,14 @@ export default function Home() {
 
       {/* Form or Messages */}
       {!submitted ? (
-        <GreetingForm onDone={handleFormDone} darkMode={darkMode} />
+        <GreetingForm
+          onDone={handleFormDone}
+          darkMode={darkMode}
+          startAudio={startTrackAudio} // pass function to trigger audio on first click
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {messages.map((msg, idx) => (
-            // No top, left, or darkMode props needed for grid layout
             <GreetingCard key={msg._id} g={msg} index={idx} />
           ))}
         </div>
