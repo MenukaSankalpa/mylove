@@ -1,26 +1,23 @@
 {
-  "version": 3,
-  "routes": [
+  "version": 2,
+  "builds": [
     {
-      "src": "/(.*).mp3",
-      "headers": {
-        "Content-Type": "audio/mpeg"
-      }
-    },
-    {
-      "src": "/(.*).mp4",
-      "headers": {
-        "Content-Type": "video/mp4"
-      }
-    },
-    {
-      "src": "/(.*).webm",
-      "headers": {
-        "Content-Type": "video/webm"
-      }
+      "src": "next.config.js",
+      "use": "@vercel/next"
     }
   ],
-  "rewrites": [
-    { "source": "/api/:match*", "destination": "/api/:match*" }
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*\\.(mp3|wav|ogg))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
   ]
 }
