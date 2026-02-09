@@ -1,0 +1,26 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "/(.*).mp3",
+      "headers": {
+        "Content-Type": "audio/mpeg"
+      }
+    },
+    {
+      "src": "/(.*).mp4",
+      "headers": {
+        "Content-Type": "video/mp4"
+      }
+    },
+    {
+      "src": "/(.*).webm",
+      "headers": {
+        "Content-Type": "video/webm"
+      }
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/:match*", "destination": "/api/:match*" }
+  ]
+}

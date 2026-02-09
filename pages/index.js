@@ -38,7 +38,7 @@ export default function Home() {
   // Play track01.mp3 when form opens
   useEffect(() => {
     if (!trackAudioRef.current) {
-      trackAudioRef.current = new Audio('../track04.mp3');
+      trackAudioRef.current = new Audio('/track04.mp3');
       trackAudioRef.current.loop = true;
       trackAudioRef.current.volume = 0.2;
       trackAudioRef.current.play().catch(() => {});
@@ -51,7 +51,7 @@ export default function Home() {
 
     // Play music.mp3 after submission
     if (!submitAudioRef.current) {
-      submitAudioRef.current = new Audio('../track02.mp3');
+      submitAudioRef.current = new Audio('/track02.mp3');
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }
