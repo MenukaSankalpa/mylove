@@ -12,8 +12,8 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(true);
   const [audioStarted, setAudioStarted] = useState(false);
 
-  const trackAudioRef = useRef(null);
-  const submitAudioRef = useRef(null);
+  const trackAudioRef = useRef<HTMLAudioElement | null>(null);
+  const submitAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Dark mode toggle
   useEffect(() => {
@@ -36,11 +36,11 @@ export default function Home() {
     loadMessages();
   }, []);
 
-  // Play opening track after first user interaction
+  // Start audio on first user interaction
   const startTrackAudio = () => {
     if (!audioStarted) {
       if (!trackAudioRef.current) {
-        trackAudioRef.current = new Audio('/track04.mp3');
+        trackAudioRef.current = new Audio('/track04.mp3'); // must be in public/
         trackAudioRef.current.loop = true;
         trackAudioRef.current.volume = 0.2;
       }
@@ -53,12 +53,12 @@ export default function Home() {
 
   // Form submission handler
   const handleFormDone = () => {
-    // Stop track04
+    // Stop opening track
     if (trackAudioRef.current) trackAudioRef.current.pause();
 
     // Play submission track
     if (!submitAudioRef.current) {
-      submitAudioRef.current = new Audio('/track02.mp3');
+      submitAudioRef.current = new Audio('/track02.mp3'); // must be in public/
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }
@@ -72,7 +72,8 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen px-4 py-10">
-      <Background darkMode={darkMode} showSnow={!submitted} />
+      {/* Background animations */}
+      <Background darkMode={darkMode} />
       <FestiveAnimation show={!submitted} darkMode={darkMode} />
 
       {/* Dark/Light mode toggle */}
@@ -90,7 +91,7 @@ export default function Home() {
         <GreetingForm
           onDone={handleFormDone}
           darkMode={darkMode}
-          startAudio={startTrackAudio} // pass function to trigger audio on first click
+          startAudio={startTrackAudio} // function triggered on first click inside form
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
