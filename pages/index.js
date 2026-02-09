@@ -1,15 +1,18 @@
-// index.js (Home Component) - Simplified for grid layout.
+'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import GreetingForm from '../components/GreetingForm';
 import GreetingCard from '../components/GreetingCard';
-import Background from '../components/Background';
-import FestiveAnimation from '../components/FestiveAnimation';
+
+const Background = dynamic(() => import('../components/Background'), { ssr: false });
+const FestiveAnimation = dynamic(() => import('../components/FestiveAnimation'), { ssr: false });
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [audioStarted, setAudioStarted] = useState(false);
 
   const trackAudioRef = useRef(null);
   const submitAudioRef = useRef(null);
@@ -19,7 +22,7 @@ export default function Home() {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Load messages from MongoDB (no position calculation needed)
+  // Load messages from MongoDB
   const loadMessages = async () => {
     try {
       const res = await fetch('/api/greetings');
@@ -35,30 +38,50 @@ export default function Home() {
     loadMessages();
   }, []);
 
-  // Play track01.mp3 when form opens
+  // Initialize audio on client only
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     if (!trackAudioRef.current) {
-      trackAudioRef.current = new Audio('/track04.mp3');
+      trackAudioRef.current = new Audio('/audio/track04.mp3');
       trackAudioRef.current.loop = true;
       trackAudioRef.current.volume = 0.2;
-      trackAudioRef.current.play().catch(() => {});
     }
-  }, []);
 
-  const handleFormDone = () => {
-    // Stop track01
-    if (trackAudioRef.current) trackAudioRef.current.pause();
-
-    // Play music.mp3 after submission
     if (!submitAudioRef.current) {
-      submitAudioRef.current = new Audio('/track02.mp3');
+      submitAudioRef.current = new Audio('/audio/track02.mp3');
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }
-    submitAudioRef.current.play().catch(() => {});
+
+    // Attempt autoplay on load
+    trackAudioRef.current.play().catch(() => {
+      console.log('Autoplay blocked, will start on first click');
+    });
+  }, []);
+
+  // Start audio on first click if blocked
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (!audioStarted && trackAudioRef.current) {
+        trackAudioRef.current.play().catch(() => {});
+        setAudioStarted(true);
+      }
+    };
+    window.addEventListener('click', handleUserInteraction, { once: true });
+    return () => window.removeEventListener('click', handleUserInteraction);
+  }, [audioStarted]);
+
+  const handleFormDone = () => {
+    // Stop opening track
+    if (trackAudioRef.current) trackAudioRef.current.pause();
+
+    // Play submission track
+    if (submitAudioRef.current) {
+      submitAudioRef.current.play().catch(() => {});
+    }
 
     setSubmitted(true);
-    // Reload messages to show the new submission
     loadMessages();
   };
 
@@ -67,7 +90,6 @@ export default function Home() {
       <Background darkMode={darkMode} showSnow={!submitted} />
       <FestiveAnimation show={!submitted} darkMode={darkMode} />
 
-      {/* Dark/Light mode toggle */}
       <div className="absolute top-4 right-4 z-50">
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -77,13 +99,20 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Form or Messages */}
       {!submitted ? (
-        <GreetingForm onDone={handleFormDone} darkMode={darkMode} />
+        <GreetingForm
+          onDone={handleFormDone}
+          darkMode={darkMode}
+          startAudio={() => {
+            if (!audioStarted && trackAudioRef.current) {
+              trackAudioRef.current.play().catch(() => {});
+              setAudioStarted(true);
+            }
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {messages.map((msg, idx) => (
-            // No top, left, or darkMode props needed for grid layout
             <GreetingCard key={msg._id} g={msg} index={idx} />
           ))}
         </div>
