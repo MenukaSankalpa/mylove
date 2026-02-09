@@ -46,13 +46,13 @@ export default function Home() {
     if (typeof window === 'undefined') return;
 
     if (!trackAudioRef.current) {
-      trackAudioRef.current = new Audio('/track04.mp3');
+      trackAudioRef.current = new Audio('/public/audio/track04.mp3');
       trackAudioRef.current.loop = true;
       trackAudioRef.current.volume = 0.2;
     }
 
     if (!submitAudioRef.current) {
-      submitAudioRef.current = new Audio('/track02.mp3');
+      submitAudioRef.current = new Audio('/public/audio/track02.mp3');
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }

@@ -5,7 +5,7 @@
   ],
   "headers": [
     {
-      "source": "/:file*",
+      "source": "/audio/:file*",
       "headers": [
         {
           "key": "Cache-Control",
