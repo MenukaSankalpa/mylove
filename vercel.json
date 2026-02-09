@@ -3,9 +3,6 @@
   "builds": [
     { "src": "next.config.js", "use": "@vercel/next" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/" }
-  ],
   "headers": [
     {
       "source": "/(.*\\.(mp3|wav|ogg))",
