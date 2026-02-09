@@ -1,31 +1,25 @@
-'use client'; // MUST be at the top
+// index.js (Home Component) - Simplified for grid layout.
 
 import { useEffect, useState, useRef } from 'react';
-import dynamic from 'next/dynamic';
 import GreetingForm from '../components/GreetingForm';
 import GreetingCard from '../components/GreetingCard';
-
-// Dynamic import for client-only components
-const Background = dynamic(() => import('../components/Background'), { ssr: false });
-const FestiveAnimation = dynamic(() => import('../components/FestiveAnimation'), { ssr: false });
+import Background from '../components/Background';
+import FestiveAnimation from '../components/FestiveAnimation';
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [audioStarted, setAudioStarted] = useState(false);
 
   const trackAudioRef = useRef(null);
   const submitAudioRef = useRef(null);
 
   // Dark mode toggle
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.documentElement.classList.toggle('dark', darkMode);
-    }
+    document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Load messages from MongoDB
+  // Load messages from MongoDB (no position calculation needed)
   const loadMessages = async () => {
     try {
       const res = await fetch('/api/greetings');
@@ -41,46 +35,35 @@ export default function Home() {
     loadMessages();
   }, []);
 
-  // Initialize audio references only on client
+  // Play track01.mp3 when form opens
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     if (!trackAudioRef.current) {
       trackAudioRef.current = new Audio('/track04.mp3');
       trackAudioRef.current.loop = true;
       trackAudioRef.current.volume = 0.2;
+      trackAudioRef.current.play().catch(() => {});
     }
+  }, []);
 
+  const handleFormDone = () => {
+    // Stop track01
+    if (trackAudioRef.current) trackAudioRef.current.pause();
+
+    // Play music.mp3 after submission
     if (!submitAudioRef.current) {
       submitAudioRef.current = new Audio('/track02.mp3');
       submitAudioRef.current.loop = true;
       submitAudioRef.current.volume = 0.2;
     }
-  }, []);
-
-  // Start audio on first user interaction
-  const startTrackAudio = () => {
-    if (!audioStarted && trackAudioRef.current) {
-      trackAudioRef.current.play().catch(() => console.log('User interaction required to play audio'));
-      setAudioStarted(true);
-    }
-  };
-
-  // Handle form submission
-  const handleFormDone = () => {
-    if (trackAudioRef.current) trackAudioRef.current.pause();
-
-    if (submitAudioRef.current) {
-      submitAudioRef.current.play().catch(() => console.log('User interaction required to play audio'));
-    }
+    submitAudioRef.current.play().catch(() => {});
 
     setSubmitted(true);
+    // Reload messages to show the new submission
     loadMessages();
   };
 
   return (
     <div className="relative min-h-screen px-4 py-10">
-      {/* Background & floating hearts */}
       <Background darkMode={darkMode} showSnow={!submitted} />
       <FestiveAnimation show={!submitted} darkMode={darkMode} />
 
@@ -96,14 +79,11 @@ export default function Home() {
 
       {/* Form or Messages */}
       {!submitted ? (
-        <GreetingForm
-          onDone={handleFormDone}
-          darkMode={darkMode}
-          startAudio={startTrackAudio} // trigger first audio
-        />
+        <GreetingForm onDone={handleFormDone} darkMode={darkMode} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {messages.map((msg, idx) => (
+            // No top, left, or darkMode props needed for grid layout
             <GreetingCard key={msg._id} g={msg} index={idx} />
           ))}
         </div>
