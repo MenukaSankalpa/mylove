@@ -21,29 +21,36 @@ export default function Home() {
   }, [darkMode]);
 
   // Load messages from MongoDB
-  const loadMessages = async () => {
-    try {
-      const res = await fetch('/api/greetings');
-      if (!res.ok) throw new Error('Failed to fetch messages');
-      const data = await res.json();
-      setMessages(data);
-    } catch (err) {
-      console.error('Failed to load messages', err);
-    }
-  };
-
   useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const res = await fetch('/api/greetings');
+        if (!res.ok) throw new Error('Failed to fetch messages');
+        const data = await res.json();
+        setMessages(data);
+      } catch (err) {
+        console.error('Failed to load messages', err);
+      }
+    };
     loadMessages();
   }, []);
 
-  // Start audio on first user interaction
+  // Only create Audio objects on client
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      trackAudioRef.current = new Audio('/track04.mp3');
+      trackAudioRef.current.loop = true;
+      trackAudioRef.current.volume = 0.2;
+
+      submitAudioRef.current = new Audio('/track02.mp3');
+      submitAudioRef.current.loop = true;
+      submitAudioRef.current.volume = 0.2;
+    }
+  }, []);
+
+  // Start track after first user interaction
   const startTrackAudio = () => {
-    if (!audioStarted) {
-      if (!trackAudioRef.current) {
-        trackAudioRef.current = new Audio('/track04.mp3'); // must be in public/
-        trackAudioRef.current.loop = true;
-        trackAudioRef.current.volume = 0.2;
-      }
+    if (!audioStarted && trackAudioRef.current) {
       trackAudioRef.current
         .play()
         .catch(() => console.log('User interaction required to play audio'));
@@ -51,32 +58,22 @@ export default function Home() {
     }
   };
 
-  // Form submission handler
   const handleFormDone = () => {
-    // Stop opening track
     if (trackAudioRef.current) trackAudioRef.current.pause();
-
-    // Play submission track
-    if (!submitAudioRef.current) {
-      submitAudioRef.current = new Audio('/track02.mp3'); // must be in public/
-      submitAudioRef.current.loop = true;
-      submitAudioRef.current.volume = 0.2;
+    if (submitAudioRef.current) {
+      submitAudioRef.current
+        .play()
+        .catch(() => console.log('User interaction required to play audio'));
     }
-    submitAudioRef.current
-      .play()
-      .catch(() => console.log('User interaction required to play audio'));
 
     setSubmitted(true);
-    loadMessages();
   };
 
   return (
     <div className="relative min-h-screen px-4 py-10">
-      {/* Background animations */}
       <Background darkMode={darkMode} />
       <FestiveAnimation show={!submitted} darkMode={darkMode} />
 
-      {/* Dark/Light mode toggle */}
       <div className="absolute top-4 right-4 z-50">
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -86,12 +83,11 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Form or Messages */}
       {!submitted ? (
         <GreetingForm
           onDone={handleFormDone}
           darkMode={darkMode}
-          startAudio={startTrackAudio} // function triggered on first click inside form
+          startAudio={startTrackAudio} // call this on first user interaction
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
